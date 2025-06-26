@@ -1,0 +1,21 @@
+#esg-script-list {
+    list-style: none;
+    padding: 0;
+}
+#esg-script-list li {
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    position: relative;
+    cursor: move;
+}
+.esg-delete {
+    position: absolute;
+    top: 5px;
+    right: 10px;
+    color: red;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 18px;
+}

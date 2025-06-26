@@ -1,0 +1,27 @@
+.esg-gallery {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+.esg-script-card {
+    border: 1px solid #ddd;
+    padding: 15px;
+    width: 280px;
+    text-align: center;
+    border-radius: 8px;
+    background: #f9f9f9;
+}
+.esg-script-card i {
+    font-size: 40px;
+    color: #333;
+    margin-bottom: 10px;
+}
+.esg-script-card a {
+    text-decoration: none;
+    color: #0073aa;
+}
+.esg-code-preview {
+    margin-top: 10px;
+    max-height: 150px;
+    overflow-y: auto;
+}
