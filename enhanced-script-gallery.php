@@ -1,8 +1,8 @@
 <?php
 /*
 Plugin Name: Enhanced Script Gallery
-Description: Upload, manage, and showcase code scripts by auto-zipping them for safe upload. Includes gallery display, filtering, reordering, description field, and ZIP export.
-Version: 3.2
+Description: Upload, manage, and showcase scripts safely. Includes description field and ZIP upload.
+Version: 3.3
 Author: Damon Noisette
 */
 
@@ -22,9 +22,9 @@ function esg_enqueue_frontend_assets() {
     wp_enqueue_script('esg-frontend-js', ESG_PLUGIN_URL . 'assets/js/frontend.js', ['jquery'], null, true);
 
     // Font Awesome + Syntax Highlighting
-    wp_enqueue_style('font-awesome', 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css '); 
+    wp_enqueue_style('font-awesome', 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css ');
     wp_enqueue_style('prism-css', ESG_PLUGIN_URL . 'assets/prism/prism.css');
-    wp_enqueue_script('prism-js', ESP_PLUGIN_URL . 'assets/prism/prism.js', [], null, true);
+    wp_enqueue_script('prism-js', ESG_PLUGIN_URL . 'assets/prism/prism.js', [], null, true);
 
     wp_localize_script('esg-frontend-js', 'esg_ajax', [
         'ajaxurl' => admin_url('admin-ajax.php'),
@@ -67,17 +67,14 @@ add_action('admin_menu', 'esg_admin_menu');
 
 // Save uploaded script
 function esg_save_script() {
-    // Start buffer to catch any unexpected output
-    ob_start();
+    ob_start(); // Start buffer to catch any accidental output
 
-    // Security checks
     check_ajax_referer('esg_nonce', 'security');
 
     if (!current_user_can('manage_options')) {
         wp_send_json_error(['message' => 'Permission denied']);
     }
 
-    // Validate required fields
     $name = sanitize_text_field($_POST['name']);
     $type = sanitize_text_field($_POST['type']);
     $description = sanitize_textarea_field($_POST['description'] ?? '');
@@ -87,7 +84,6 @@ function esg_save_script() {
         wp_send_json_error(['message' => 'File upload failed']);
     }
 
-    // Process upload
     $upload_dir = wp_upload_dir();
     $tmp_name = $_FILES['script_file']['tmp_name'];
     $original_name = basename($_FILES['script_file']['name']);
@@ -95,15 +91,12 @@ function esg_save_script() {
     $zip_filename = $file_basename . '.zip';
     $zip_path = trailingslashit($upload_dir['path']) . $zip_filename;
 
-    // Check if ZipArchive class exists
     if (!class_exists('ZipArchive')) {
-        wp_send_json_error(['message' => 'ZIP functionality not available on this server']);
+        wp_send_json_error(['message' => 'ZIP extension not available']);
     }
 
-    // Create ZIP archive
     $zip = new ZipArchive();
-    $zip_result = $zip->open($zip_path, ZipArchive::CREATE | ZipArchive::OVERWRITE);
-    if ($zip_result !== TRUE) {
+    if ($zip->open($zip_path, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== TRUE) {
         wp_send_json_error(['message' => 'Cannot create ZIP archive']);
     }
 
@@ -126,8 +119,7 @@ function esg_save_script() {
     usort($scripts, fn($a, $b) => $a['order'] <=> $b['order']);
     update_option('esg_scripts', $scripts);
 
-    // Discard any extra output that may have been accidentally printed
-    ob_clean();
+    $output = ob_get_clean(); // Discard any extra output
 
     wp_send_json_success([
         'message' => 'Script saved as ZIP!',
@@ -138,7 +130,7 @@ add_action('wp_ajax_esg_save_script', 'esg_save_script');
 
 // Update script order
 function esg_update_order() {
-    ob_start(); // Prevent unwanted output
+    ob_start();
 
     check_ajax_referer('esg_nonce', 'security');
 
@@ -169,7 +161,7 @@ add_action('wp_ajax_esg_update_order', 'esg_update_order');
 
 // Delete script
 function esg_delete_script() {
-    ob_start(); // Buffer to clean output
+    ob_start();
 
     check_ajax_referer('esg_nonce', 'security');
 
@@ -198,7 +190,7 @@ add_action('wp_ajax_esg_delete_script', 'esg_delete_script');
 
 // Download all scripts as ZIP
 function esg_download_all_scripts() {
-    ob_start(); // Prevent unwanted output
+    ob_start();
 
     check_ajax_referer('esg_nonce', 'security');
 
@@ -219,7 +211,7 @@ add_action('wp_ajax_esg_download_all_scripts', 'esg_download_all_scripts');
 
 // Edit script metadata
 function esg_edit_script() {
-    ob_start(); // Important: capture any accidental output
+    ob_start();
 
     check_ajax_referer('esg_nonce', 'security');
 
@@ -267,7 +259,7 @@ function esg_shortcode() {
 }
 add_shortcode('script_gallery', 'esg_shortcode');
 
-// Inline debug JS
+// Inline Debug JS
 function esg_add_inline_debug_js() {
     $screen = get_current_screen();
     if ($screen && $screen->id === 'toplevel_page_enhanced-script-gallery') {
